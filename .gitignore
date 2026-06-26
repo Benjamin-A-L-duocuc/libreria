@@ -1,0 +1,6 @@
+logs/
+context/
+target/
+.settings/
+.mvn/
+*.log
