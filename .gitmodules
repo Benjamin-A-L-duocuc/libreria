@@ -1,0 +1,12 @@
+[submodule "TiendaWeb"]
+	path = TiendaWeb
+	url = https://github.com/Benjamin-A-L-duocuc/ms-tiendaweb.git
+[submodule "Envios"]
+	path = Envios
+	url = https://github.com/Benjamin-A-L-duocuc/ms-envios.git
+[submodule "Login"]
+	path = Login
+	url = https://github.com/Benjamin-A-L-duocuc/ms-login.git
+[submodule "RegistroUsuario"]
+	path = RegistroUsuario
+	url = https://github.com/Benjamin-A-L-duocuc/ms-registrousuario.git
