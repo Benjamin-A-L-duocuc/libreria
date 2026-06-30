@@ -10,3 +10,18 @@
 [submodule "RegistroUsuario"]
 	path = RegistroUsuario
 	url = https://github.com/Benjamin-A-L-duocuc/ms-registrousuario.git
+[submodule "MoniteoreoGeneral"]
+	path = MoniteoreoGeneral
+	url = https://github.com/Benjamin-A-L-duocuc/MoniteoreoGeneral.git
+[submodule "ms-Inventario"]
+	path = ms-Inventario
+	url = https://github.com/Gerald-Duoc/ms-Inventario.git
+[submodule "ms-Sucursal"]
+	path = ms-Sucursal
+	url = https://github.com/Gerald-Duoc/ms-Sucursal.git
+[submodule "proveedor_libro"]
+	path = proveedor_libro
+	url = https://github.com/jon4707/proveedor_libro.git
+[submodule "venta_libro"]
+	path = venta_libro
+	url = https://github.com/jon4707/venta_libro.git

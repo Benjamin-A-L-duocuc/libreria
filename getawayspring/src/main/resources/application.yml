@@ -6,21 +6,21 @@ spring:
         gateway:
             routes:
 
-                # --- Login (8081) ---
+                # --- Login (8092) ---
                 -   id: login
-                    uri: http://localhost:8081
+                    uri: http://localhost:8092
                     predicates:
                         - Path=/api/v1/sesiones/**
 
-                # --- Registro Usuarios (8082) ---
+                # --- Registro Usuarios (8093) ---
                 -   id: registro-usuarios
-                    uri: http://localhost:8082
+                    uri: http://localhost:8093
                     predicates:
                         - Path=/api/v1/usuarios/**
 
-                # --- Inventario (8083) ---
+                # --- Inventario (8094) ---
                 -   id: inventario-libros
-                    uri: http://localhost:8083
+                    uri: http://localhost:8094
                     predicates:
                         - Path=/api/libros/**,/api/stock-libros/**,/api/reservas/**
 
@@ -62,21 +62,21 @@ spring:
 
                 # --- Swagger API docs routes (for Swagger aggregation) ---
                 -   id: login-docs
-                    uri: http://localhost:8081
+                    uri: http://localhost:8092
                     predicates:
                         - Path=/v3/api-docs/login
                     filters:
                         - RewritePath=/v3/api-docs/login, /api-docs
 
                 -   id: registro-docs
-                    uri: http://localhost:8082
+                    uri: http://localhost:8093
                     predicates:
                         - Path=/v3/api-docs/registro
                     filters:
                         - RewritePath=/v3/api-docs/registro, /api-docs
 
                 -   id: inventario-docs
-                    uri: http://localhost:8083
+                    uri: http://localhost:8094
                     predicates:
                         - Path=/v3/api-docs/inventario
                     filters:

@@ -59,7 +59,7 @@ echo ""
 # 1) Matar procesos viejos en los puertos usados
 # --------------------------------------------------
 log "Limpiando procesos previos..."
-for port in 8080 8081 8082 8083 8084 8085 8086 8087 8089 8098; do
+for port in 8080 8092 8093 8094 8084 8085 8086 8087 8089 8098; do
     kill "$(lsof -t -i:"$port" 2>/dev/null)" 2>/dev/null || true
 done
 sleep 2
@@ -70,9 +70,9 @@ log "Puertos liberados."
 # --------------------------------------------------
 SERVICES=(
     "Gateway:8080:getawayspring"
-    "Login:8081:Login"
-    "RegistroUsuario:8082:RegistroUsuario"
-    "Inventario:8083:ms-Inventario"
+    "Login:8092:Login"
+    "RegistroUsuario:8093:RegistroUsuario"
+    "Inventario:8094:ms-Inventario"
     "Envios:8084:Envios"
     "TiendaWeb:8085:TiendaWeb"
     "Sucursal:8086:ms-Sucursal"
@@ -113,9 +113,9 @@ wait_for() {
 }
 
 wait_for "Gateway"       8080
-wait_for "Login"         8081
-wait_for "Registro"      8082
-wait_for "Inventario"    8083
+wait_for "Login"         8092
+wait_for "Registro"      8093
+wait_for "Inventario"    8094
 wait_for "Envios"        8084
 wait_for "TiendaWeb"     8085
 wait_for "Sucursal"      8086
@@ -275,5 +275,5 @@ echo -e "  ${CYAN}Monitoreo estado:${NC}    http://localhost:8080/api/v1/monitor
 echo -e "  ${CYAN}Detalle venta:${NC}       http://localhost:8080/api/v1/ventas/$V"
 echo -e "  ${CYAN}Logs:${NC}               $LOG_DIR/"
 echo ""
-echo -e "  Para detener: ${YELLOW}kill \$(lsof -t -i:8080 -i:8081 -i:8082 -i:8083 -i:8084 -i:8085 -i:8086 -i:8087 -i:8089 -i:8098)${NC}"
+echo -e "  Para detener: ${YELLOW}kill \$(lsof -t -i:8080 -i:8092 -i:8093 -i:8094 -i:8084 -i:8085 -i:8086 -i:8087 -i:8089 -i:8098)${NC}"
 echo ""
