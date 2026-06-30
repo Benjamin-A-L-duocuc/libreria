@@ -1,0 +1,156 @@
+spring:
+    application:
+        name: getawayspring
+
+    cloud:
+        gateway:
+            routes:
+
+                # --- Login (8081) ---
+                -   id: login
+                    uri: http://localhost:8081
+                    predicates:
+                        - Path=/api/v1/sesiones/**
+
+                # --- Registro Usuarios (8082) ---
+                -   id: registro-usuarios
+                    uri: http://localhost:8082
+                    predicates:
+                        - Path=/api/v1/usuarios/**
+
+                # --- Inventario (8083) ---
+                -   id: inventario-libros
+                    uri: http://localhost:8083
+                    predicates:
+                        - Path=/api/libros/**,/api/stock-libros/**,/api/reservas/**
+
+                # --- Envios (8084) ---
+                -   id: envios
+                    uri: http://localhost:8084
+                    predicates:
+                        - Path=/api/v1/envios/**
+
+                # --- Tienda Web (8085) ---
+                -   id: tienda-web
+                    uri: http://localhost:8085
+                    predicates:
+                        - Path=/api/v1/tienda/**
+
+                # --- Sucursal (8086) ---
+                -   id: sucursal
+                    uri: http://localhost:8086
+                    predicates:
+                        - Path=/api/sucursales/**,/api/transferencias/**,/api/reposiciones/**
+
+                # --- Ventas (8087) ---
+                -   id: ventas
+                    uri: http://localhost:8087
+                    predicates:
+                        - Path=/api/v1/ventas/**,/api/v1/descuentos/**
+
+                # --- Monitoreo (8089) ---
+                -   id: monitoreo
+                    uri: http://localhost:8089
+                    predicates:
+                        - Path=/api/v1/monitoreo/**
+
+                # --- Proveedores (8098) ---
+                -   id: proveedores
+                    uri: http://localhost:8098
+                    predicates:
+                        - Path=/api/v1/proveedor/**,/api/v1/solicitudes/**
+
+                # --- Swagger API docs routes (for Swagger aggregation) ---
+                -   id: login-docs
+                    uri: http://localhost:8081
+                    predicates:
+                        - Path=/v3/api-docs/login
+                    filters:
+                        - RewritePath=/v3/api-docs/login, /api-docs
+
+                -   id: registro-docs
+                    uri: http://localhost:8082
+                    predicates:
+                        - Path=/v3/api-docs/registro
+                    filters:
+                        - RewritePath=/v3/api-docs/registro, /api-docs
+
+                -   id: inventario-docs
+                    uri: http://localhost:8083
+                    predicates:
+                        - Path=/v3/api-docs/inventario
+                    filters:
+                        - RewritePath=/v3/api-docs/inventario, /v3/api-docs
+
+                -   id: envios-docs
+                    uri: http://localhost:8084
+                    predicates:
+                        - Path=/v3/api-docs/envios
+                    filters:
+                        - RewritePath=/v3/api-docs/envios, /api-docs
+
+                -   id: tienda-docs
+                    uri: http://localhost:8085
+                    predicates:
+                        - Path=/v3/api-docs/tienda
+                    filters:
+                        - RewritePath=/v3/api-docs/tienda, /v3/api-docs
+
+                -   id: sucursal-docs
+                    uri: http://localhost:8086
+                    predicates:
+                        - Path=/v3/api-docs/sucursal
+                    filters:
+                        - RewritePath=/v3/api-docs/sucursal, /v3/api-docs
+
+                -   id: ventas-docs
+                    uri: http://localhost:8087
+                    predicates:
+                        - Path=/v3/api-docs/ventas
+                    filters:
+                        - RewritePath=/v3/api-docs/ventas, /api-docs
+
+                -   id: monitoreo-docs
+                    uri: http://localhost:8089
+                    predicates:
+                        - Path=/v3/api-docs/monitoreo
+                    filters:
+                        - RewritePath=/v3/api-docs/monitoreo, /api-docs
+
+                -   id: proveedores-docs
+                    uri: http://localhost:8098
+                    predicates:
+                        - Path=/v3/api-docs/proveedores
+                    filters:
+                        - RewritePath=/v3/api-docs/proveedores, /v3/api-docs
+
+springdoc:
+    swagger-ui:
+        urls:
+            -   name: Login
+                url: /v3/api-docs/login
+            -   name: Registro Usuarios
+                url: /v3/api-docs/registro
+            -   name: Inventario
+                url: /v3/api-docs/inventario
+            -   name: Envios
+                url: /v3/api-docs/envios
+            -   name: Tienda Web
+                url: /v3/api-docs/tienda
+            -   name: Sucursal
+                url: /v3/api-docs/sucursal
+            -   name: Ventas
+                url: /v3/api-docs/ventas
+            -   name: Monitoreo
+                url: /v3/api-docs/monitoreo
+            -   name: Proveedores
+                url: /v3/api-docs/proveedores
+
+server:
+    port: 8080
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health
