@@ -4,6 +4,18 @@ BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$BASE_DIR/logs"
 mkdir -p "$LOG_DIR"
 
+is_windows() {
+  case "$(uname -s 2>/dev/null)" in
+    MINGW*|CYGWIN*|MSYS*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+MVN_CMD="./mvnw"
+if is_windows && [ -x "$BASE_DIR/mvnw.cmd" ]; then
+  MVN_CMD="./mvnw.cmd"
+fi
+
 echo "================================================"
 echo "  Starting all microservices..."
 echo "================================================"
@@ -15,7 +27,7 @@ run_service() {
     local dir="$BASE_DIR/$3"
 
     echo "[$name] Starting on port $port... ($dir)"
-    (cd "$dir" && nohup ./mvnw spring-boot:run > "$LOG_DIR/$name.log" 2>&1 &)
+    (cd "$dir" && nohup "$MVN_CMD" spring-boot:run > "$LOG_DIR/$name.log" 2>&1 &)
     echo "[$name] PID: $!"
 }
 
@@ -46,6 +58,10 @@ echo "  Gateway ........ http://localhost:8080/swagger-ui.html"
   echo "  Proveedores .... http://localhost:8098/swagger-ui.html"
   echo "  Monitoreo ...... http://localhost:8089/swagger-ui.html"
 echo ""
-echo "  To stop all: kill $(jobs -p)"
-echo "  To tail a log: tail -f logs/<name>.log"
+if is_windows; then
+  echo "  To stop all: close the Java processes from Task Manager or use taskkill /PID <pid> /F"
+else
+  echo "  To stop all: kill $(jobs -p)"
+fi
+  echo "  To tail a log: tail -f logs/<name>.log"
 echo "================================================"

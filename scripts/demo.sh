@@ -8,6 +8,39 @@
 # ==========================================================
 set -e
 
+is_windows() {
+  case "$(uname -s 2>/dev/null)" in
+    MINGW*|CYGWIN*|MSYS*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+find_pids_by_port() {
+  local port=$1
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -t -i:"$port" 2>/dev/null
+  elif command -v netstat >/dev/null 2>&1; then
+    netstat -ano | grep ":$port" | awk '{print $NF}' | sort -u
+  else
+    return 1
+  fi
+}
+
+kill_port() {
+  local port=$1
+  local pids
+  pids=$(find_pids_by_port "$port" 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    if is_windows; then
+      for pid in $pids; do
+        taskkill /F /PID "$pid" > /dev/null 2>&1 || true
+      done
+    else
+      kill $pids > /dev/null 2>&1 || true
+    fi
+  fi
+}
+
 CLEAN=0
 for arg in "$@"; do [ "$arg" = "--clean" ] && CLEAN=1; done
 
@@ -32,14 +65,19 @@ if [ "$CLEAN" = "1" ]; then
         exit 0
     fi
 
-    DB_USER="pma"
-    DB_PASS="adminB"
+    DB_USER="root"
+    DB_PASS=""
     DBS=("inventario_ms" "login_usuario" "registro_usuario" "Envio" "Tienda_Web" "sucursal_ms" "ventas" "monitoreo_ms" "proveedor")
 
     for db in "${DBS[@]}"; do
         echo -n "  Limpiando $db... "
-        mysql -u "$DB_USER" -p"$DB_PASS" -N -e "SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema='$db'" 2>/dev/null \
-            | mysql -u "$DB_USER" -p"$DB_PASS" "$db" 2>/dev/null && echo "OK" || echo "SKIP (sin tablas)"
+        if [ -z "$DB_PASS" ]; then
+            mysql -u "$DB_USER" -N -e "SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema='$db'" 2>/dev/null \
+                | mysql -u "$DB_USER" "$db" 2>/dev/null && echo "OK" || echo "SKIP (sin tablas)"
+        else
+            mysql -u "$DB_USER" -p"$DB_PASS" -N -e "SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema='$db'" 2>/dev/null \
+                | mysql -u "$DB_USER" -p"$DB_PASS" "$db" 2>/dev/null && echo "OK" || echo "SKIP (sin tablas)"
+        fi
     done
     echo -e "${GREEN}  Bases de datos limpias.${NC}"
     echo ""
@@ -60,7 +98,7 @@ echo ""
 # --------------------------------------------------
 log "Limpiando procesos previos..."
 for port in 8080 8092 8093 8094 8084 8085 8086 8087 8089 8098; do
-    kill "$(lsof -t -i:"$port" 2>/dev/null)" 2>/dev/null || true
+    kill_port "$port"
 done
 sleep 2
 log "Puertos liberados."

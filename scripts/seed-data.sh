@@ -14,10 +14,10 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-section()   { echo -e "\n${BLUE}══════════════════════════════════════════════${NC}"; echo -e "${BLUE}  $1${NC}"; echo -e "${BLUE}══════════════════════════════════════════════${NC}"; }
-ok()        { echo -e "  ${GREEN}✔${NC} $1"; }
-info()      { echo -e "  ${CYAN}→${NC} $1"; }
-highlight() { echo -e "  ${YELLOW}$1${NC}"; }
+section()   { printf "\n${BLUE}══════════════════════════════════════════════${NC}\n${BLUE}  %s${NC}\n${BLUE}══════════════════════════════════════════════${NC}\n" "$1"; }
+ok()        { printf "  ${GREEN}✔${NC} %s\n" "$1"; }
+info()      { printf "  ${CYAN}→${NC} %s\n" "$1"; }
+highlight() { printf "  ${YELLOW}%s${NC}\n" "$1"; }
 
 # --------------------------------------------------
 section "1. CREANDO SUCURSALES"
