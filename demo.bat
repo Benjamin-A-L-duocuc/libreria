@@ -1,9 +1,34 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "BASE_DIR=%~dp0.."
+set "BASE_DIR=%~dp0"
 set "LOG_DIR=%BASE_DIR%\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+
+:: --------------------------------------------------
+:: Pre-flight checks
+:: --------------------------------------------------
+echo Checking prerequisites...
+
+java -version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Java (JDK 21) is not installed or not in PATH.
+    echo   Install JDK 21 from https://adoptium.net/ and ensure java is in PATH.
+    pause
+    exit /b 1
+)
+
+curl --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] curl is not available.
+    echo   Windows 10 build 17063+ includes curl natively.
+    echo   For older Windows, download curl from https://curl.se/windows/
+    pause
+    exit /b 1
+)
+
+echo   All prerequisites OK.
+echo.
 
 set "GW=http://localhost:8080"
 
@@ -18,8 +43,13 @@ echo.
 :: --------------------------------------------------
 echo [1/6] Cleaning previous processes...
 for %%p in (8080 8092 8093 8094 8084 8085 8086 8087 8089 8098) do (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%%p "') do (
-        taskkill /F /PID %%a > nul 2>&1
+    for /f "tokens=*" %%a in ('netstat -ano ^| findstr /R "%%p[^0-9]"') do (
+        set "line=%%a"
+        set "PID="
+        for %%b in (%%a) do set "PID=%%b"
+        if defined PID (
+            taskkill /F /PID !PID! > nul 2>&1
+        )
     )
 )
 timeout /t 3 /nobreak > nul
@@ -35,7 +65,7 @@ set "SERVICES=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:R
 for %%s in (%SERVICES%) do (
     for /f "tokens=1-3 delims=:" %%a in ("%%s") do (
         echo   Starting %%a (port %%b)...
-        start "Libreria-%%a" /D "%BASE_DIR%\%%c" /MIN cmd /c ".\mvnw.cmd spring-boot:run > "%LOG_DIR%\%%a.log" 2>&1"
+        start "Libreria-%%a" /D "%BASE_DIR%\%%c" /MIN cmd /c ".\mvnw.cmd spring-boot:run > %LOG_DIR%\%%a.log 2>&1"
     )
 )
 

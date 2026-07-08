@@ -4,3 +4,6 @@ target/
 .settings/
 .mvn/
 *.log
+Thumbs.db
+desktop.ini
+*.bak
