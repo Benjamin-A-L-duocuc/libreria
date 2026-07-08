@@ -65,7 +65,7 @@ set "SERVICES=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:R
 for %%s in (%SERVICES%) do (
     for /f "tokens=1-3 delims=:" %%a in ("%%s") do (
         echo   Starting %%a (port %%b)...
-        start "Libreria-%%a" /D "%BASE_DIR%\%%c" /MIN cmd /c ".\mvnw.cmd spring-boot:run > %LOG_DIR%\%%a.log 2>&1"
+        start "Libreria-%%a" /D "%BASE_DIR%\%%c" cmd /k ".\mvnw.cmd spring-boot:run"
     )
 )
 
@@ -113,7 +113,7 @@ echo.
 echo   To stop: close the terminal windows or run:
 echo     taskkill /F /IM java.exe
 echo ================================================
-
+pause
 goto :eof
 
 :api

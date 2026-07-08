@@ -47,6 +47,6 @@ set "name=%~1"
 set "port=%~2"
 set "dir=%BASE_DIR%%~3"
 echo [%name%] Starting on port %port%... (%dir%)
-start "Libreria-%name%" /D "%dir%" /MIN cmd /c ".\mvnw.cmd spring-boot:run > %LOG_DIR%\%name%.log 2>&1"
+start "Libreria-%name%" /D "%dir%" cmd /k ".\mvnw.cmd spring-boot:run"
 echo [%name%] Launched.
 goto :eof
