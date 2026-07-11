@@ -59,7 +59,7 @@ call :crear_libro "1984" "Distopia clasica" "Secker & Warburg" "George Orwell" 4
 set "L3=%CAPTURED%"
 call :crear_libro "El Principito" "Literatura infantil" "Reynal & Hitchcock" "Antoine Saint-Exupery" 3000 8000 "INFANTIL"
 set "L4=%CAPTURED%"
-call :crear_libro "Clean Code" "Buenas practicas de programacion" "Prentice Hall" "Robert C. Martin" 12000 25000 "TECNOLOGIA"
+call :crear_libro "Clean Code" "Buenas practicas de programacion" "Prentice Hall" "Robert C. Martin" 12000 25000 "NO_FICCION"
 set "L5=%CAPTURED%"
 echo   [OK] Libros: %L1%, %L2%, %L3%, %L4%, %L5%
 
@@ -95,7 +95,7 @@ REM --------------------------------------------------
 echo [6/10] CREANDO DESCUENTOS
 REM --------------------------------------------------
 
-call :api_capture POST "/api/v1/descuentos" "{\"nombre\":\"10%% OFF Semanal\",\"fechaVencimiento\":\"2026-12-31\",\"porcentaje\":10,\"cantidad\":3}"
+call :api_capture POST "/api/v1/descuentos" "{\"nombre\":\"10%% OFF Semanal\",\"fechaVencimiento\":1798675200000,\"porcentaje\":10,\"cantidad\":3}"
 set "D1=%CAPTURED%"
 echo   [OK] Descuentos generados (primer ID: %D1%)
 
@@ -183,53 +183,89 @@ REM ============================================================
 
 :api_silent
 if "%~3"=="" (
-    curl -sf -X %~1 "%BASE_URL%%~2" >nul 2>&1
+    curl -s -X %~1 "%BASE_URL%%~2" > "%TEMP%\seed_err.txt" 2>&1
 ) else (
-    curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" >nul 2>&1
+    curl -s -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" > "%TEMP%\seed_err.txt" 2>&1
+)
+if %errorlevel% neq 0 (
+    echo   [ERROR] %~1 %~2
+    type "%TEMP%\seed_err.txt"
 )
 exit /b 0
 
 :api_capture
 set "CAPTURED="
-curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" > "%TEMP%\seed_cap.txt" 2>&1
+curl -s -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" > "%TEMP%\seed_cap.txt" 2>&1
+if %errorlevel% neq 0 (
+    echo   [ERROR] %~1 %~2
+    type "%TEMP%\seed_cap.txt"
+    exit /b 0
+)
 for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
     if "!CAPTURED!"=="" (
         set "CAPTURED=%%x"
         set "CAPTURED=!CAPTURED: =!"
     )
+)
+if "!CAPTURED!"=="" (
+    echo   [WARN] No se pudo extraer ID de la respuesta:
+    type "%TEMP%\seed_cap.txt"
 )
 exit /b 0
 
 :api_get_id
 set "CAPTURED="
-curl -sf "%BASE_URL%%~1" > "%TEMP%\seed_cap.txt" 2>&1
+curl -s "%BASE_URL%%~1" > "%TEMP%\seed_cap.txt" 2>&1
+if %errorlevel% neq 0 (
+    echo   [ERROR] GET %~1
+    type "%TEMP%\seed_cap.txt"
+    exit /b 0
+)
 for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
     if "!CAPTURED!"=="" (
         set "CAPTURED=%%x"
         set "CAPTURED=!CAPTURED: =!"
     )
+)
+if "!CAPTURED!"=="" (
+    echo   [WARN] No se pudo extraer ID de:
+    type "%TEMP%\seed_cap.txt"
 )
 exit /b 0
 
 :api_show
 if "%~3"=="" (
-    curl -sf -X %~1 "%BASE_URL%%~2" 2>nul
+    curl -s -X %~1 "%BASE_URL%%~2" 2>&1
 ) else (
-    curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" 2>nul
+    curl -s -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" 2>&1
 )
+if %errorlevel% neq 0 echo   [ERROR] %~1 %~2
 exit /b 0
 
 :crear_libro
 set "CAPTURED="
-curl -sf -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "{\"nombre\":\"%~1\",\"descripcion\":\"%~2\",\"editorial\":\"%~3\",\"autor\":\"%~4\",\"precioCompra\":%~5,\"precioVenta\":%~6,\"categoria\":\"%~7\",\"fechaCreacion\":\"2026-01-15\"}" > "%TEMP%\seed_cap.txt" 2>&1
+curl -s -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "{\"nombre\":\"%~1\",\"descripcion\":\"%~2\",\"editorial\":\"%~3\",\"autor\":\"%~4\",\"precioCompra\":%~5,\"precioVenta\":%~6,\"categoria\":\"%~7\",\"fechaCreacion\":\"2026-01-15\"}" > "%TEMP%\seed_cap.txt" 2>&1
+if %errorlevel% neq 0 (
+    echo   [ERROR] Crear libro: %~1
+    type "%TEMP%\seed_cap.txt"
+    exit /b 0
+)
 for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
     if "!CAPTURED!"=="" (
         set "CAPTURED=%%x"
         set "CAPTURED=!CAPTURED: =!"
     )
 )
+if "!CAPTURED!"=="" (
+    echo   [WARN] No se pudo extraer ID del libro:
+    type "%TEMP%\seed_cap.txt"
+)
 exit /b 0
 
 :asignar_stock
-curl -sf -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "{\"idLibro\":%~1,\"idSucursal\":%~2,\"stock\":%~3,\"stockMinimo\":%~4,\"stockMaximo\":%~5}" >nul 2>&1
+curl -s -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "{\"idLibro\":%~1,\"idSucursal\":%~2,\"stock\":%~3,\"stockMinimo\":%~4,\"stockMaximo\":%~5}" > "%TEMP%\seed_err.txt" 2>&1
+if %errorlevel% neq 0 (
+    echo   [ERROR] Asignar stock: Libro=%~1 Sucursal=%~2
+    type "%TEMP%\seed_err.txt"
+)
 exit /b 0
