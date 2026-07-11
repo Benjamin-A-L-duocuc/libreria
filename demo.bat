@@ -71,27 +71,35 @@ for %%p in (%PORTS%) do call :kill_port %%p
 echo  Puertos liberados.
 
 REM --------------------------------------------------
-REM  2) Arrancar cada MS con mvnw.cmd spring-boot:run
+REM  2) Arrancar primeros 9 MS con mvnw.cmd spring-boot:run
+REM     (Monitoreo se lanza despues para evitar race condition)
 REM --------------------------------------------------
 echo [2/5] Iniciando microservicios...
 
-set "SERVICES=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:RegistroUsuario Inventario:8094:ms-Inventario Envios:8084:Envios TiendaWeb:8085:TiendaWeb Sucursal:8086:ms-Sucursal Ventas:8087:venta_libro\libro Monitoreo:8089:MoniteoreoGeneral Proveedores:8098:proveedor_libro\libros"
+set "FIRST_WAVE=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:RegistroUsuario Inventario:8094:ms-Inventario Envios:8084:Envios TiendaWeb:8085:TiendaWeb Sucursal:8086:ms-Sucursal Ventas:8087:venta_libro\libro Proveedores:8098:proveedor_libro\libros"
 
-for %%s in (%SERVICES%) do (
+for %%s in (%FIRST_WAVE%) do (
     for /f "tokens=1-3 delims=:" %%a in ("%%s") do (
         echo   [%%a] Starting on port %%b...
         start "Libreria-%%a" /D "%BASE_DIR%\%%c" cmd /k ".\mvnw.cmd spring-boot:run"
     )
 )
 
-echo  Todos los procesos lanzados.
+echo  Primeros 9 servicios lanzados.
 
 REM --------------------------------------------------
-REM  3) Esperar a que todos respondan /actuator/health
+REM  3) Esperar primeros 9, luego lanzar Monitoreo
 REM --------------------------------------------------
 echo [3/5] Esperando que los servicios esten listos...
 
 call :wait_for 8080 Gateway
+if errorlevel 1 (
+    echo.
+    echo  ERROR: Gateway no disponible. Verifique que el submodulo
+    echo  getawayspring este correctamente clonado (git submodule update --init).
+    pause
+    exit /b 1
+)
 call :wait_for 8092 Login
 call :wait_for 8093 Registro
 call :wait_for 8094 Inventario
@@ -99,8 +107,11 @@ call :wait_for 8084 Envios
 call :wait_for 8085 TiendaWeb
 call :wait_for 8086 Sucursal
 call :wait_for 8087 Ventas
-call :wait_for 8089 Monitoreo
 call :wait_for 8098 Proveedores
+
+echo  Ahora lanzando Monitoreo...
+start "Libreria-Monitoreo" /D "%BASE_DIR%\MoniteoreoGeneral" cmd /k ".\mvnw.cmd spring-boot:run"
+call :wait_for 8089 Monitoreo
 
 echo  Todos los servicios UP.
 
@@ -108,7 +119,7 @@ REM --------------------------------------------------
 REM  4) Sembrar datos via Gateway
 REM --------------------------------------------------
 echo [4/5] Sembrando datos de prueba...
-call seed-data.bat
+call "%~dp0seed-data.bat"
 
 REM --------------------------------------------------
 REM  5) Mostrar resumen
