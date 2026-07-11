@@ -2,28 +2,24 @@
 setlocal enabledelayedexpansion
 
 set "BASE_DIR=%~dp0"
-set "LOG_DIR=%BASE_DIR%logs"
-if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
 echo ================================================
 echo   Starting all microservices...
 echo ================================================
 echo.
 
-call :run_service "Gateway"            8080 "getawayspring"
-call :run_service "Login"              8092 "Login"
-call :run_service "RegistroUsuario"    8093 "RegistroUsuario"
-call :run_service "Inventario"         8094 "ms-Inventario"
-call :run_service "Envios"             8084 "Envios"
-call :run_service "TiendaWeb"          8085 "TiendaWeb"
-call :run_service "Sucursal"           8086 "ms-Sucursal"
-call :run_service "Ventas"             8087 "venta_libro\libro"
-call :run_service "Proveedores"        8098 "proveedor_libro\libros"
-call :run_service "Monitoreo"          8089 "MoniteoreoGeneral"
+set "SERVICES=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:RegistroUsuario Inventario:8094:ms-Inventario Envios:8084:Envios TiendaWeb:8085:TiendaWeb Sucursal:8086:ms-Sucursal Ventas:8087:venta_libro\libro Monitoreo:8089:MoniteoreoGeneral Proveedores:8098:proveedor_libro\libros"
+
+for %%s in (%SERVICES%) do (
+    for /f "tokens=1-3 delims=:" %%a in ("%%s") do (
+        echo   [%%a] Starting on port %%b...
+        start "Libreria-%%a" /D "%BASE_DIR%\%%c" cmd /k ".\mvnw.cmd spring-boot:run"
+    )
+)
 
 echo.
 echo ================================================
-echo   All services starting. Logs in .\logs\
+echo   All services starting.
 echo ================================================
 echo.
 echo   Gateway ........ http://localhost:8080/swagger-ui.html
@@ -38,15 +34,5 @@ echo   Proveedores .... http://localhost:8098/swagger-ui.html
 echo   Monitoreo ...... http://localhost:8089/swagger-ui.html
 echo.
 echo   To stop: taskkill /F /IM java.exe
-echo   To tail a log: type logs\^<name^>.log
-echo ================================================
-goto :eof
-
-:run_service
-set "name=%~1"
-set "port=%~2"
-set "dir=%BASE_DIR%%~3"
-echo [%name%] Starting on port %port%... (%dir%)
-start "Libreria-%name%" /D "%dir%" cmd /k ".\mvnw.cmd spring-boot:run"
-echo [%name%] Launched.
-goto :eof
+echo.
+pause

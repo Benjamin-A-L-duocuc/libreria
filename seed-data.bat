@@ -3,88 +3,233 @@ setlocal enabledelayedexpansion
 
 set "BASE_URL=http://localhost:8080"
 
+echo.
 echo ================================================
-echo   Populating sample data via Gateway
+echo   SEED DATA - Insertando datos de prueba
 echo ================================================
 echo.
 
-:: --------------------------------------------------
-echo [1/10] CREATING BRANCHES...
-:: --------------------------------------------------
-call :api POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Centro\",\"direccion\":\"Av. Principal 123, Santiago\",\"fechaInicio\":\"2025-01-15\",\"telefono\":\"+56212345678\",\"email\":\"centro@libreria.cl\",\"estado\":true}"
-echo   Branch Centro created.
+REM --------------------------------------------------
+echo [1/10] CREANDO SUCURSALES
+REM --------------------------------------------------
 
-call :api POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Norte\",\"direccion\":\"Calle Norte 456, Antofagasta\",\"fechaInicio\":\"2025-03-01\",\"telefono\":\"+56298765432\",\"email\":\"norte@libreria.cl\",\"estado\":true}"
-echo   Branch Norte created.
+call :api_capture POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Centro\",\"direccion\":\"Av. Principal 123, Santiago\",\"fechaInicio\":\"2025-01-15\",\"telefono\":\"+56212345678\",\"email\":\"centro@libreria.cl\",\"estado\":true}"
+set "ID_CENTRO=%CAPTURED%"
+echo   [OK] Sucursal Centro (ID: %ID_CENTRO%)
 
-:: --------------------------------------------------
-echo [2/10] REGISTERING USERS...
-:: --------------------------------------------------
-call :api POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Carlos Admin\",\"email\":\"carlos@libreria.cl\",\"password\":\"Admin123!\",\"tipo\":\"AdministradorGeneral\"}"
-call :api POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Maria Cajero\",\"email\":\"maria@libreria.cl\",\"password\":\"Cajero123!\",\"tipo\":\"Cajero\"}"
-call :api POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Juan Perez\",\"email\":\"juan@email.cl\",\"password\":\"Cliente1!\",\"tipo\":\"Cliente\"}"
-call :api POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Ana Silva\",\"email\":\"ana@email.cl\",\"password\":\"Cliente2!\",\"tipo\":\"Cliente\"}"
-echo   Users registered.
+call :api_capture POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Norte\",\"direccion\":\"Calle Norte 456, Antofagasta\",\"fechaInicio\":\"2025-03-01\",\"telefono\":\"+56298765432\",\"email\":\"norte@libreria.cl\",\"estado\":true}"
+set "ID_NORTE=%CAPTURED%"
+echo   [OK] Sucursal Norte (ID: %ID_NORTE%)
 
-:: --------------------------------------------------
-echo [3/10] CREATING BOOKS...
-:: --------------------------------------------------
-call :api POST "/api/libros" "{\"nombre\":\"Cien Anios de Soledad\",\"descripcion\":\"Novela del realismo magico\",\"editorial\":\"Sudamericana\",\"autor\":\"Gabriel Garcia Marquez\",\"precioCompra\":5000,\"precioVenta\":15000,\"categoria\":\"FICCION\",\"fechaCreacion\":\"2026-01-15\"}"
-call :api POST "/api/libros" "{\"nombre\":\"Breve Historia del Tiempo\",\"descripcion\":\"Divulgacion cientifica\",\"editorial\":\"Bantam Books\",\"autor\":\"Stephen Hawking\",\"precioCompra\":7000,\"precioVenta\":12000,\"categoria\":\"CIENCIA_FICCION\",\"fechaCreacion\":\"2026-01-15\"}"
-call :api POST "/api/libros" "{\"nombre\":\"1984\",\"descripcion\":\"Distopia clasica\",\"editorial\":\"Secker and Warburg\",\"autor\":\"George Orwell\",\"precioCompra\":4000,\"precioVenta\":10000,\"categoria\":\"FICCION\",\"fechaCreacion\":\"2026-01-15\"}"
-call :api POST "/api/libros" "{\"nombre\":\"El Principito\",\"descripcion\":\"Literatura infantil\",\"editorial\":\"Reynal and Hitchcock\",\"autor\":\"Antoine Saint-Exupery\",\"precioCompra\":3000,\"precioVenta\":8000,\"categoria\":\"INFANTIL\",\"fechaCreacion\":\"2026-01-15\"}"
-call :api POST "/api/libros" "{\"nombre\":\"Clean Code\",\"descripcion\":\"Buenas practicas de programacion\",\"editorial\":\"Prentice Hall\",\"autor\":\"Robert C. Martin\",\"precioCompra\":12000,\"precioVenta\":25000,\"categoria\":\"TECNOLOGIA\",\"fechaCreacion\":\"2026-01-15\"}"
-echo   Books created.
+REM --------------------------------------------------
+echo [2/10] REGISTRANDO USUARIOS
+REM --------------------------------------------------
 
-:: --------------------------------------------------
-echo [4/10] ASSIGNING STOCK...
-:: --------------------------------------------------
-:: Note: Update IDs below after running to match actual IDs
-:: Using placeholder IDs: Centro=1, Norte=2, Books=1-5
-call :api POST "/api/stock-libros" "{\"idLibro\":1,\"idSucursal\":1,\"stock\":20,\"stockMinimo\":5,\"stockMaximo\":100}"
-call :api POST "/api/stock-libros" "{\"idLibro\":2,\"idSucursal\":1,\"stock\":15,\"stockMinimo\":5,\"stockMaximo\":50}"
-call :api POST "/api/stock-libros" "{\"idLibro\":3,\"idSucursal\":1,\"stock\":10,\"stockMinimo\":3,\"stockMaximo\":80}"
-call :api POST "/api/stock-libros" "{\"idLibro\":4,\"idSucursal\":1,\"stock\":30,\"stockMinimo\":10,\"stockMaximo\":120}"
-call :api POST "/api/stock-libros" "{\"idLibro\":5,\"idSucursal\":1,\"stock\":8,\"stockMinimo\":2,\"stockMaximo\":30}"
-echo   Stock assigned to Centro.
+call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Carlos Admin\",\"email\":\"carlos@libreria.cl\",\"password\":\"Admin123!\",\"tipo\":\"AdministradorGeneral\"}"
+echo   [OK] Carlos Admin (carlos@libreria.cl)
 
-:: --------------------------------------------------
-echo [5/10] CREATING PROVIDERS...
-:: --------------------------------------------------
-call :api POST "/api/v1/proveedor" "{\"nombre\":\"Distribuidora Cultural SPA\",\"rut\":\"76.123.456-7\",\"direccion\":\"Av. Providencia 789\",\"telefono\":\"+56222223333\",\"email\":\"ventas@cultural.cl\",\"fechaRegistro\":\"2025-06-01\",\"activo\":true,\"solicitudes\":[]}"
-call :api POST "/api/v1/proveedor" "{\"nombre\":\"Importadora de Libros Ltda\",\"rut\":\"77.987.654-3\",\"direccion\":\"Calle Comercio 321\",\"telefono\":\"+56224445555\",\"email\":\"info@importadora.cl\",\"fechaRegistro\":\"2025-06-15\",\"activo\":true,\"solicitudes\":[]}"
-echo   Providers created.
+call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Maria Cajero\",\"email\":\"maria@libreria.cl\",\"password\":\"Cajero123!\",\"tipo\":\"Cajero\"}"
+echo   [OK] Maria Cajero (maria@libreria.cl)
 
-:: --------------------------------------------------
-echo [6/10] CREATING DISCOUNTS...
-:: --------------------------------------------------
-call :api POST "/api/v1/descuentos" "{\"nombre\":\"10%% OFF Semanal\",\"fechaVencimiento\":\"2026-12-31\",\"porcentaje\":10,\"cantidad\":3}"
-echo   Discounts created.
+call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Juan Perez\",\"email\":\"juan@email.cl\",\"password\":\"Cliente1!\",\"tipo\":\"Cliente\"}"
+echo   [OK] Juan Perez (juan@email.cl)
 
-:: --------------------------------------------------
-echo [7/10] CREATING IN-STORE SALE...
-:: --------------------------------------------------
-call :api POST "/api/v1/ventas/crear" "{\"idSucursal\":1,\"idCliente\":3}"
-:: Add products & finalize would go here with actual IDs
+call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Ana Silva\",\"email\":\"ana@email.cl\",\"password\":\"Cliente2!\",\"tipo\":\"Cliente\"}"
+echo   [OK] Ana Silva (ana@email.cl)
 
+call :api_get_id "/api/v1/usuarios/email/carlos@libreria.cl"
+set "ID_ADMIN=%CAPTURED%"
+call :api_get_id "/api/v1/usuarios/email/maria@libreria.cl"
+set "ID_CAJERO=%CAPTURED%"
+call :api_get_id "/api/v1/usuarios/email/juan@email.cl"
+set "ID_CLIENTE1=%CAPTURED%"
+call :api_get_id "/api/v1/usuarios/email/ana@email.cl"
+set "ID_CLIENTE2=%CAPTURED%"
+echo   [i] IDs: Admin=%ID_ADMIN%, Cajero=%ID_CAJERO%, Cliente1=%ID_CLIENTE1%, Cliente2=%ID_CLIENTE2%
+
+REM --------------------------------------------------
+echo [3/10] CREANDO LIBROS (Inventario)
+REM --------------------------------------------------
+
+call :crear_libro "Cien Anos de Soledad" "Novela del realismo magico" "Sudamericana" "Gabriel Garcia Marquez" 5000 15000 "FICCION"
+set "L1=%CAPTURED%"
+call :crear_libro "Breve Historia del Tiempo" "Divulgacion cientifica" "Bantam Books" "Stephen Hawking" 7000 12000 "CIENCIA_FICCION"
+set "L2=%CAPTURED%"
+call :crear_libro "1984" "Distopia clasica" "Secker & Warburg" "George Orwell" 4000 10000 "FICCION"
+set "L3=%CAPTURED%"
+call :crear_libro "El Principito" "Literatura infantil" "Reynal & Hitchcock" "Antoine Saint-Exupery" 3000 8000 "INFANTIL"
+set "L4=%CAPTURED%"
+call :crear_libro "Clean Code" "Buenas practicas de programacion" "Prentice Hall" "Robert C. Martin" 12000 25000 "TECNOLOGIA"
+set "L5=%CAPTURED%"
+echo   [OK] Libros: %L1%, %L2%, %L3%, %L4%, %L5%
+
+REM --------------------------------------------------
+echo [4/10] ASIGNANDO STOCK
+REM --------------------------------------------------
+
+call :asignar_stock %L1% %ID_CENTRO% 20 5 100
+call :asignar_stock %L2% %ID_CENTRO% 15 5 50
+call :asignar_stock %L3% %ID_CENTRO% 10 3 80
+call :asignar_stock %L4% %ID_CENTRO% 30 10 120
+call :asignar_stock %L5% %ID_CENTRO% 8 2 30
+echo   [OK] Stock asignado en Sucursal Centro
+
+call :asignar_stock %L1% %ID_NORTE% 10 5 80
+call :asignar_stock %L2% %ID_NORTE% 5 3 40
+call :asignar_stock %L3% %ID_NORTE% 8 3 60
+call :asignar_stock %L4% %ID_NORTE% 20 10 100
+call :asignar_stock %L5% %ID_NORTE% 3 1 20
+echo   [OK] Stock asignado en Sucursal Norte
+
+REM --------------------------------------------------
+echo [5/10] CREANDO PROVEEDORES
+REM --------------------------------------------------
+
+call :api_capture POST "/api/v1/proveedor" "{\"nombre\":\"Distribuidora Cultural SPA\",\"rut\":\"76.123.456-7\",\"direccion\":\"Av. Providencia 789\",\"telefono\":\"+56222223333\",\"email\":\"ventas@cultural.cl\",\"fechaRegistro\":\"2025-06-01\",\"activo\":true,\"solicitudes\":[]}"
+set "P1=%CAPTURED%"
+call :api_capture POST "/api/v1/proveedor" "{\"nombre\":\"Importadora de Libros Ltda\",\"rut\":\"77.987.654-3\",\"direccion\":\"Calle Comercio 321\",\"telefono\":\"+56224445555\",\"email\":\"info@importadora.cl\",\"fechaRegistro\":\"2025-06-15\",\"activo\":true,\"solicitudes\":[]}"
+set "P2=%CAPTURED%"
+echo   [OK] Proveedores: ID %P1%, ID %P2%
+
+REM --------------------------------------------------
+echo [6/10] CREANDO DESCUENTOS
+REM --------------------------------------------------
+
+call :api_capture POST "/api/v1/descuentos" "{\"nombre\":\"10%% OFF Semanal\",\"fechaVencimiento\":\"2026-12-31\",\"porcentaje\":10,\"cantidad\":3}"
+set "D1=%CAPTURED%"
+echo   [OK] Descuentos generados (primer ID: %D1%)
+
+REM --------------------------------------------------
+echo [7/10] VENTA PRESENCIAL
+REM --------------------------------------------------
+
+echo   Paso 1: Crear venta...
+call :api_capture POST "/api/v1/ventas/crear" "{\"idSucursal\":%ID_CENTRO%, \"idCliente\":%ID_CLIENTE1%}"
+set "ID_VENTA=%CAPTURED%"
+echo   [OK] Venta creada (ID: %ID_VENTA%, cliente: Juan Perez)
+
+echo   Paso 2: Agregar productos...
+call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L1%, \"cantidad\":2}"
+echo   [OK] +2 x Cien Anos de Soledad
+call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L3%, \"cantidad\":1}"
+echo   [OK] +1 x 1984
+call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L5%, \"cantidad\":1, \"descuentoId\":%D1%}"
+echo   [OK] +1 x Clean Code (con 10%% descuento)
+
+echo   Paso 3: Finalizar venta...
+call :api_show POST "/api/v1/ventas/%ID_VENTA%/finalizar" "{\"medioPago\":\"EFECTIVO\", \"montoPagado\":60000}"
+echo   [OK] Venta finalizada
+
+echo   Verificando unidades vendidas...
+call :api_get_id "/api/libros/%L1%"
+set "UNIDS_VEND=%CAPTURED%"
+echo   [i] Libro %L1% - unidadesVendidas=%UNIDS_VEND%
+
+REM --------------------------------------------------
+echo [8/10] SESION LOGIN
+REM --------------------------------------------------
+
+call :api_capture POST "/api/v1/sesiones/iniciar" "{\"idUsuario\":%ID_CLIENTE1%}"
+set "ID_SESION=%CAPTURED%"
+echo   [OK] Sesion iniciada (ID: %ID_SESION%)
+
+REM --------------------------------------------------
+echo [9/10] CREANDO ENVIO
+REM --------------------------------------------------
+
+call :api_capture POST "/api/v1/envios" "{\"direccionDestino\":\"Av. Siempre Viva 742, Santiago\",\"tipoEnvio\":\"venta_online\",\"notas\":\"Envio express del libro comprado\"}"
+set "ID_ENVIO=%CAPTURED%"
+echo   [OK] Envio creado (ID: %ID_ENVIO%)
+
+call :api_silent PATCH "/api/v1/envios/%ID_ENVIO%/programar" "{\"fechaEnvioProgramada\":\"2026-07-01T10:00:00\"}"
+echo   [OK] Envio programado
+
+call :api_silent POST "/api/v1/envios/%ID_ENVIO%/iniciar"
+echo   [OK] Envio en transito
+
+call :api_silent POST "/api/v1/envios/%ID_ENVIO%/recibir"
+echo   [OK] Envio recibido
+
+REM --------------------------------------------------
+echo [10/10] VERIFICACIONES
+REM --------------------------------------------------
+
+echo   Estado del sistema:
+curl -sf "%BASE_URL%/api/v1/monitoreo/estado" 2>nul
+if errorlevel 1 echo   (monitoreo no disponible)
 echo.
+
+REM --------------------------------------------------
 echo ================================================
-echo   SAMPLE DATA INSERTED!
+echo   DATOS DE PRUEBA INSERTADOS
 echo ================================================
-echo   Gateway: http://localhost:8080/swagger-ui.html
 echo.
-echo   NOTE: Update IDs in seed-data.bat after first run
-echo   to match the auto-generated IDs.
-echo ================================================
+echo   Gateway:     http://localhost:8080/swagger-ui.html
+echo   Sucursales:  %ID_CENTRO% (Centro), %ID_NORTE% (Norte)
+echo   Libros:      %L1%, %L2%, %L3%, %L4%, %L5%
+echo   Usuarios:    %ID_ADMIN% (Admin), %ID_CAJERO% (Cajero)
+echo                %ID_CLIENTE1% (Juan), %ID_CLIENTE2% (Ana)
+echo   Proveedores: %P1%, %P2%
+echo   Descuentos:  %D1%
+echo   Venta:       %ID_VENTA%
+echo   Sesion:      %ID_SESION%
+echo   Envio:       %ID_ENVIO%
+echo.
 goto :eof
 
-:api
-set "method=%~1"
-set "url=%~2"
-set "data=%~3"
-if defined data (
-    curl -s -X %method% "%BASE_URL%%url%" -H "Content-Type: application/json" -d "%data%" > nul
+REM ============================================================
+REM  SUBROUTINES
+REM ============================================================
+
+:api_silent
+if "%~3"=="" (
+    curl -sf -X %~1 "%BASE_URL%%~2" >nul 2>&1
 ) else (
-    curl -s -X %method% "%BASE_URL%%url%" > nul
+    curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" >nul 2>&1
 )
-goto :eof
+exit /b 0
+
+:api_capture
+set "CAPTURED="
+curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" > "%TEMP%\seed_cap.txt" 2>&1
+for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
+    if "!CAPTURED!"=="" (
+        set "CAPTURED=%%x"
+        set "CAPTURED=!CAPTURED: =!"
+    )
+)
+exit /b 0
+
+:api_get_id
+set "CAPTURED="
+curl -sf "%BASE_URL%%~1" > "%TEMP%\seed_cap.txt" 2>&1
+for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
+    if "!CAPTURED!"=="" (
+        set "CAPTURED=%%x"
+        set "CAPTURED=!CAPTURED: =!"
+    )
+)
+exit /b 0
+
+:api_show
+if "%~3"=="" (
+    curl -sf -X %~1 "%BASE_URL%%~2" 2>nul
+) else (
+    curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" 2>nul
+)
+exit /b 0
+
+:crear_libro
+set "CAPTURED="
+curl -sf -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "{\"nombre\":\"%~1\",\"descripcion\":\"%~2\",\"editorial\":\"%~3\",\"autor\":\"%~4\",\"precioCompra\":%~5,\"precioVenta\":%~6,\"categoria\":\"%~7\",\"fechaCreacion\":\"2026-01-15\"}" > "%TEMP%\seed_cap.txt" 2>&1
+for /f "tokens=2 delims=:," %%x in ('type "%TEMP%\seed_cap.txt"') do (
+    if "!CAPTURED!"=="" (
+        set "CAPTURED=%%x"
+        set "CAPTURED=!CAPTURED: =!"
+    )
+)
+exit /b 0
+
+:asignar_stock
+curl -sf -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "{\"idLibro\":%~1,\"idSucursal\":%~2,\"stock\":%~3,\"stockMinimo\":%~4,\"stockMaximo\":%~5}" >nul 2>&1
+exit /b 0
