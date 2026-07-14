@@ -1,43 +1,34 @@
-# API Gateway (getawayspring)
+# API Gateway
 
-Punto de entrada unico del sistema. Proxy inverso que enruta todas las peticiones HTTP a los microservicios backend. No tiene base de datos propia.
+El punto de entrada unico de toda la plataforma. No contiene logica de negocio — solo enruta peticiones HTTP a los microservicios correctos y sirve una documentacion Swagger unificada.
 
-## Puerto
+## Que hace
 
-**9080** — Unico puerto expuesto al exterior.
+Un cliente (navegador, app movil, Postman) solo necesita conocer **un puerto: 9080**. El gateway examina la URL de cada peticion y la reenvia al microservicio correspondiente. Esto significa que nunca se accede directamente a los puertos 8084, 8092, 8094, etc.
 
-## Rutas
+Tambien agrega los Swagger docs de los 9 microservilos en un solo portal de documentacion accesible desde el navegador.
 
-| Destino | Puerto | Predicado |
-|---------|--------|-----------|
-| Login | 8092 | `/api/v1/sesiones/**` |
-| Registro Usuarios | 8093 | `/api/v1/usuarios/**` |
-| Inventario | 8094 | `/api/libros/**`, `/api/stock-libros/**`, `/api/reservas/**` |
-| Envios | 8084 | `/api/v1/envios/**` |
-| TiendaWeb | 8085 | `/api/v1/tienda/**` |
-| Sucursal | 8086 | `/api/sucursales/**`, `/api/transferencias/**`, `/api/reposiciones/**` |
-| Ventas | 8087 | `/api/v1/ventas/**`, `/api/v1/descuentos/**` |
-| Monitoreo | 8089 | `/api/v1/monitoreo/**` |
-| Proveedores | 8098 | `/api/v1/proveedor/**`, `/api/v1/solicitudes/**` |
+## Configuracion
 
-## Ejecucion
+Todo esta en `src/main/resources/application.yml` — no hay codigo Java custom. Las rutas se definen con prefijos de URL:
+
+| Prefijo de URL | Microservicio destino |
+|---------------|----------------------|
+| `/api/v1/sesiones/**` | Login (:8092) |
+| `/api/v1/usuarios/**` | Registro Usuarios (:8093) |
+| `/api/libros/**`, `/api/stock-libros/**`, `/api/reservas/**` | Inventario (:8094) |
+| `/api/v1/envios/**` | Envios (:8084) |
+| `/api/v1/tienda/**` | TiendaWeb (:8085) |
+| `/api/sucursales/**`, `/api/transferencias/**`, `/api/reposiciones/**` | Sucursal (:8086) |
+| `/api/v1/ventas/**`, `/api/v1/descuentos/**` | Ventas (:8087) |
+| `/api/v1/monitoreo/**` | Monitoreo (:8089) |
+| `/api/v1/proveedor/**`, `/api/v1/solicitudes/**` | Proveedores (:8098) |
+
+## Ejecutar
 
 ```cmd
 cd getawayspring
 .\mvnw.cmd spring-boot:run
 ```
 
-## Swagger
-
-Swagger UI esta disponible en la raiz del gateway. Cada microservicio registra su documentacion de API a traves de rutas de agregacion.
-
-## Configuracion
-
-Archivo: `src/main/resources/application.yml`
-
-Spring Cloud Gateway usa rutas declarativas en YAML. No hay codigo Java personalizado — toda la logica de enrutamiento esta en la configuracion.
-
-## Dependencias clave
-
-- `spring-cloud-starter-gateway` (reactivo, WebFlux)
-- `springdoc-openapi-starter-webflux-ui`
+Puerto: **9080** | DB: ninguna | Swagger: `http://localhost:9080/swagger-ui.html`
