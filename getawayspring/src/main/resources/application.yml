@@ -147,7 +147,7 @@ springdoc:
                 url: /v3/api-docs/proveedores
 
 server:
-    port: 8080
+    port: 9080
 
 management:
     endpoints:

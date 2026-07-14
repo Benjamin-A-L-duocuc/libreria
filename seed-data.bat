@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "BASE_URL=http://localhost:8080"
+set "BASE_URL=http://localhost:9080"
 
 echo.
 echo ================================================
@@ -10,14 +10,53 @@ echo ================================================
 echo.
 
 REM --------------------------------------------------
+REM  Pre-flight: curl check
+REM --------------------------------------------------
+curl --version >nul 2>&1
+if errorlevel 1 (
+    echo [FATAL] curl no encontrado en PATH.
+    pause
+    exit /b 1
+)
+
+REM --------------------------------------------------
+REM  Pre-flight: gateway health check
+REM --------------------------------------------------
+echo [0/10] Verificando Gateway en %BASE_URL% ...
+set "GW_OK=0"
+for /l %%i in (1,1,15) do (
+    curl -sf "%BASE_URL%/api/v1/monitoreo/estado" >nul 2>&1
+    if !errorlevel! equ 0 (
+        set "GW_OK=1"
+        goto :gw_ok
+    )
+    timeout /t 2 /nobreak >nul
+)
+:gw_ok
+if "%GW_OK%"=="0" (
+    echo.
+    echo [FATAL] Gateway no disponible en %BASE_URL%
+    echo         Asegurese de que los microservicios estan corriendo ^(run-all.bat^)
+    echo.
+    pause
+    exit /b 1
+)
+echo   [OK] Gateway disponible
+echo.
+
+REM --------------------------------------------------
 echo [1/10] CREANDO SUCURSALES
 REM --------------------------------------------------
 
-call :api_capture POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Centro\",\"direccion\":\"Av. Principal 123, Santiago\",\"fechaInicio\":\"2025-01-15\",\"telefono\":\"+56212345678\",\"email\":\"centro@libreria.cl\",\"estado\":true}"
+echo {"idAdminGeneral":1,"idGerenteSede":1,"nombre":"Sucursal Centro","direccion":"Av. Principal 123, Santiago","fechaInicio":"2025-01-15","telefono":"+56212345678","email":"centro@libreria.cl","estado":true} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/sucursales"
+if errorlevel 1 goto :fatal
 set "ID_CENTRO=%CAPTURED%"
 echo   [OK] Sucursal Centro (ID: %ID_CENTRO%)
 
-call :api_capture POST "/api/sucursales" "{\"idAdminGeneral\":1,\"idGerenteSede\":1,\"nombre\":\"Sucursal Norte\",\"direccion\":\"Calle Norte 456, Antofagasta\",\"fechaInicio\":\"2025-03-01\",\"telefono\":\"+56298765432\",\"email\":\"norte@libreria.cl\",\"estado\":true}"
+echo {"idAdminGeneral":1,"idGerenteSede":1,"nombre":"Sucursal Norte","direccion":"Calle Norte 456, Antofagasta","fechaInicio":"2025-03-01","telefono":"+56298765432","email":"norte@libreria.cl","estado":true} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/sucursales"
+if errorlevel 1 goto :fatal
 set "ID_NORTE=%CAPTURED%"
 echo   [OK] Sucursal Norte (ID: %ID_NORTE%)
 
@@ -25,16 +64,20 @@ REM --------------------------------------------------
 echo [2/10] REGISTRANDO USUARIOS
 REM --------------------------------------------------
 
-call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Carlos Admin\",\"email\":\"carlos@libreria.cl\",\"password\":\"Admin123!\",\"tipo\":\"AdministradorGeneral\"}"
+echo {"nombreCompleto":"Carlos Admin","email":"carlos@libreria.cl","password":"Admin123^!","tipo":"AdministradorGeneral"} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/usuarios"
 echo   [OK] Carlos Admin (carlos@libreria.cl)
 
-call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Maria Cajero\",\"email\":\"maria@libreria.cl\",\"password\":\"Cajero123!\",\"tipo\":\"Cajero\"}"
+echo {"nombreCompleto":"Maria Cajero","email":"maria@libreria.cl","password":"Cajero123^!","tipo":"Cajero"} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/usuarios"
 echo   [OK] Maria Cajero (maria@libreria.cl)
 
-call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Juan Perez\",\"email\":\"juan@email.cl\",\"password\":\"Cliente1!\",\"tipo\":\"Cliente\"}"
+echo {"nombreCompleto":"Juan Perez","email":"juan@email.cl","password":"Cliente1^!","tipo":"Cliente"} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/usuarios"
 echo   [OK] Juan Perez (juan@email.cl)
 
-call :api_silent POST "/api/v1/usuarios" "{\"nombreCompleto\":\"Ana Silva\",\"email\":\"ana@email.cl\",\"password\":\"Cliente2!\",\"tipo\":\"Cliente\"}"
+echo {"nombreCompleto":"Ana Silva","email":"ana@email.cl","password":"Cliente2^!","tipo":"Cliente"} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/usuarios"
 echo   [OK] Ana Silva (ana@email.cl)
 
 call :api_get_id "/api/v1/usuarios/email/carlos@libreria.cl"
@@ -85,9 +128,11 @@ REM --------------------------------------------------
 echo [5/10] CREANDO PROVEEDORES
 REM --------------------------------------------------
 
-call :api_capture POST "/api/v1/proveedor" "{\"nombre\":\"Distribuidora Cultural SPA\",\"rut\":\"76.123.456-7\",\"direccion\":\"Av. Providencia 789\",\"telefono\":\"+56222223333\",\"email\":\"ventas@cultural.cl\",\"fechaRegistro\":\"2025-06-01\",\"activo\":true,\"solicitudes\":[]}"
+echo {"nombre":"Distribuidora Cultural SPA","rut":"76.123.456-7","direccion":"Av. Providencia 789","telefono":"+56222223333","email":"ventas@cultural.cl","fechaRegistro":"2025-06-01","activo":true,"solicitudes":[]} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/proveedor"
 set "P1=%CAPTURED%"
-call :api_capture POST "/api/v1/proveedor" "{\"nombre\":\"Importadora de Libros Ltda\",\"rut\":\"77.987.654-3\",\"direccion\":\"Calle Comercio 321\",\"telefono\":\"+56224445555\",\"email\":\"info@importadora.cl\",\"fechaRegistro\":\"2025-06-15\",\"activo\":true,\"solicitudes\":[]}"
+echo {"nombre":"Importadora de Libros Ltda","rut":"77.987.654-3","direccion":"Calle Comercio 321","telefono":"+56224445555","email":"info@importadora.cl","fechaRegistro":"2025-06-15","activo":true,"solicitudes":[]} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/proveedor"
 set "P2=%CAPTURED%"
 echo   [OK] Proveedores: ID %P1%, ID %P2%
 
@@ -95,41 +140,62 @@ REM --------------------------------------------------
 echo [6/10] CREANDO DESCUENTOS
 REM --------------------------------------------------
 
-call :api_capture POST "/api/v1/descuentos" "{\"nombre\":\"10%% OFF Semanal\",\"fechaVencimiento\":1798675200000,\"porcentaje\":10,\"cantidad\":3}"
-set "D1=%CAPTURED%"
-echo   [OK] Descuentos generados (primer ID: %D1%)
+set "D1="
+echo {"nombre":"10%% OFF Semanal","fechaVencimiento":"2026-12-31","porcentaje":10,"cantidad":3} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/descuentos"
+if not errorlevel 1 (
+    set "D1=%CAPTURED%"
+    echo   [OK] Descuentos generados (primer ID: !D1!^)
+) else (
+    echo   [WARN] No se pudieron crear descuentos (continuando sin descuento^)
+)
 
 REM --------------------------------------------------
 echo [7/10] VENTA PRESENCIAL
 REM --------------------------------------------------
 
 echo   Paso 1: Crear venta...
-call :api_capture POST "/api/v1/ventas/crear" "{\"idSucursal\":%ID_CENTRO%, \"idCliente\":%ID_CLIENTE1%}"
+echo {"idSucursal":%ID_CENTRO%,"idCliente":%ID_CLIENTE1%} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/ventas/crear"
+if errorlevel 1 goto :fatal
 set "ID_VENTA=%CAPTURED%"
 echo   [OK] Venta creada (ID: %ID_VENTA%, cliente: Juan Perez)
 
 echo   Paso 2: Agregar productos...
-call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L1%, \"cantidad\":2}"
+echo {"idLibro":%L1%,"cantidad":2} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/ventas/%ID_VENTA%/productos"
 echo   [OK] +2 x Cien Anos de Soledad
-call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L3%, \"cantidad\":1}"
+
+echo {"idLibro":%L3%,"cantidad":1} > "%TEMP%\seed_body.json"
+call :api_fire POST "/api/v1/ventas/%ID_VENTA%/productos"
 echo   [OK] +1 x 1984
-call :api_silent POST "/api/v1/ventas/%ID_VENTA%/productos" "{\"idLibro\":%L5%, \"cantidad\":1, \"descuentoId\":%D1%}"
-echo   [OK] +1 x Clean Code (con 10%% descuento)
+
+if not "%D1%"=="" (
+    echo {"idLibro":%L5%,"cantidad":1,"descuentoId":%D1%} > "%TEMP%\seed_body.json"
+    call :api_fire POST "/api/v1/ventas/%ID_VENTA%/productos"
+    echo   [OK] +1 x Clean Code (con 10%% descuento^)
+) else (
+    echo {"idLibro":%L5%,"cantidad":1} > "%TEMP%\seed_body.json"
+    call :api_fire POST "/api/v1/ventas/%ID_VENTA%/productos"
+    echo   [OK] +1 x Clean Code (sin descuento^)
+)
 
 echo   Paso 3: Finalizar venta...
-call :api_show POST "/api/v1/ventas/%ID_VENTA%/finalizar" "{\"medioPago\":\"EFECTIVO\", \"montoPagado\":60000}"
+echo {"medioPago":"EFECTIVO","montoPagado":60000} > "%TEMP%\seed_body.json"
+call :api_show_send POST "/api/v1/ventas/%ID_VENTA%/finalizar"
+echo.
 echo   [OK] Venta finalizada
 
 echo   Verificando unidades vendidas...
-call :api_get_id "/api/libros/%L1%"
-set "UNIDS_VEND=%CAPTURED%"
-echo   [i] Libro %L1% - unidadesVendidas=%UNIDS_VEND%
+curl -sS "%BASE_URL%/api/libros/%L1%" 2>nul | findstr "unidadesVendidas"
+echo.
 
 REM --------------------------------------------------
 echo [8/10] SESION LOGIN
 REM --------------------------------------------------
 
-call :api_capture POST "/api/v1/sesiones/iniciar" "{\"idUsuario\":%ID_CLIENTE1%}"
+echo {"idUsuario":%ID_CLIENTE1%} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/sesiones/iniciar"
 set "ID_SESION=%CAPTURED%"
 echo   [OK] Sesion iniciada (ID: %ID_SESION%)
 
@@ -137,17 +203,19 @@ REM --------------------------------------------------
 echo [9/10] CREANDO ENVIO
 REM --------------------------------------------------
 
-call :api_capture POST "/api/v1/envios" "{\"direccionDestino\":\"Av. Siempre Viva 742, Santiago\",\"tipoEnvio\":\"venta_online\",\"notas\":\"Envio express del libro comprado\"}"
+echo {"direccionDestino":"Av. Siempre Viva 742, Santiago","tipoEnvio":"venta_online","notas":"Envio express del libro comprado"} > "%TEMP%\seed_body.json"
+call :api_send POST "/api/v1/envios"
 set "ID_ENVIO=%CAPTURED%"
 echo   [OK] Envio creado (ID: %ID_ENVIO%)
 
-call :api_silent PATCH "/api/v1/envios/%ID_ENVIO%/programar" "{\"fechaEnvioProgramada\":\"2026-07-01T10:00:00\"}"
+echo {"fechaEnvioProgramada":"2026-07-01T10:00:00"} > "%TEMP%\seed_body.json"
+call :api_fire PATCH "/api/v1/envios/%ID_ENVIO%/programar"
 echo   [OK] Envio programado
 
-call :api_silent POST "/api/v1/envios/%ID_ENVIO%/iniciar"
+call :api_call POST "/api/v1/envios/%ID_ENVIO%/iniciar"
 echo   [OK] Envio en transito
 
-call :api_silent POST "/api/v1/envios/%ID_ENVIO%/recibir"
+call :api_call POST "/api/v1/envios/%ID_ENVIO%/recibir"
 echo   [OK] Envio recibido
 
 REM --------------------------------------------------
@@ -155,16 +223,16 @@ echo [10/10] VERIFICACIONES
 REM --------------------------------------------------
 
 echo   Estado del sistema:
-curl -sf "%BASE_URL%/api/v1/monitoreo/estado" 2>nul
+curl -sS "%BASE_URL%/api/v1/monitoreo/estado" 2>nul
 if errorlevel 1 echo   (monitoreo no disponible)
 echo.
 
 REM --------------------------------------------------
 echo ================================================
 echo   DATOS DE PRUEBA INSERTADOS
-echo ================================================
+REM ================================================
 echo.
-echo   Gateway:     http://localhost:8080/swagger-ui.html
+echo   Gateway:     http://localhost:9080/swagger-ui.html
 echo   Sucursales:  %ID_CENTRO% (Centro), %ID_NORTE% (Norte)
 echo   Libros:      %L1%, %L2%, %L3%, %L4%, %L5%
 echo   Usuarios:    %ID_ADMIN% (Admin), %ID_CAJERO% (Cajero)
@@ -175,81 +243,115 @@ echo   Venta:       %ID_VENTA%
 echo   Sesion:      %ID_SESION%
 echo   Envio:       %ID_ENVIO%
 echo.
+pause
 goto :eof
 
 REM ============================================================
 REM  SUBROUTINES
 REM ============================================================
 
-:api_silent
-if "%~3"=="" (
-    curl -sf -X %~1 "%BASE_URL%%~2" >nul 2>&1
-) else (
-    curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" >nul 2>&1
-)
-if %errorlevel% neq 0 echo   [ERROR] %~1 %~2
-exit /b 0
+:fatal
+echo.
+echo [FATAL] Error critico. No se puede continuar.
+echo.
+pause
+exit /b 1
 
-:api_capture
+REM  api_send: POST/PATCH with body from %TEMP%\seed_body.json, extract id
+:api_send
 set "CAPTURED="
-curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3" > "%TEMP%\seed_cap.txt" 2>&1
-if %errorlevel% neq 0 (
+curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
+set "CURL_RC=!errorlevel!"
+del "%TEMP%\seed_body.json" 2>nul
+if "!CURL_RC!" neq "0" (
     echo   [CURL ERROR] %~1 %~2
     type "%TEMP%\seed_cap.txt"
-    exit /b 0
+    del "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
-powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; if ($null -ne $j.id) { Write-Output $j.id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
+powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; $id = if ($j -is [array]) { $j[0].id } else { $j.id }; if ($null -ne $id) { Write-Output $id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
 for /f "usebackq delims=" %%x in ("%TEMP%\seed_id.txt") do if "!CAPTURED!"=="" set "CAPTURED=%%x"
 if "!CAPTURED!"=="" (
-    echo   [ERROR] %~1 %~2
+    echo   [ERROR] No se pudo extraer ID de: %~1 %~2
     type "%TEMP%\seed_cap.txt"
+    echo.
+    del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
 del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
 exit /b 0
 
+REM  api_fire: POST/PATCH with body from %TEMP%\seed_body.json, fire-and-forget
+:api_fire
+curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" >nul 2>&1
+set "CURL_RC=!errorlevel!"
+del "%TEMP%\seed_body.json" 2>nul
+if "!CURL_RC!" neq "0" echo   [ERROR] %~1 %~2
+exit /b 0
+
+REM  api_show_send: POST/PATCH with body from %TEMP%\seed_body.json, display response
+:api_show_send
+curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json"
+del "%TEMP%\seed_body.json" 2>nul
+exit /b 0
+
+REM  api_call: POST/PATCH without body, fire-and-forget
+:api_call
+curl -sS -X %~1 "%BASE_URL%%~2" >nul 2>&1
+if !errorlevel! neq 0 echo   [ERROR] %~1 %~2
+exit /b 0
+
+REM  api_get_id: GET request, extract id from response
 :api_get_id
 set "CAPTURED="
 curl -sS "%BASE_URL%%~1" > "%TEMP%\seed_cap.txt" 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo   [CURL ERROR] GET %~1
     type "%TEMP%\seed_cap.txt"
-    exit /b 0
+    del "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
-powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; if ($null -ne $j.id) { Write-Output $j.id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
+powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; $id = if ($j -is [array]) { $j[0].id } else { $j.id }; if ($null -ne $id) { Write-Output $id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
 for /f "usebackq delims=" %%x in ("%TEMP%\seed_id.txt") do if "!CAPTURED!"=="" set "CAPTURED=%%x"
 if "!CAPTURED!"=="" (
-    echo   [ERROR] GET %~1
+    echo   [ERROR] No se pudo extraer ID de: GET %~1
     type "%TEMP%\seed_cap.txt"
+    echo.
+    del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
 del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
 exit /b 0
 
-:api_show
-if "%~3"=="" (
-    curl -sS -X %~1 "%BASE_URL%%~2"
-) else (
-    curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "%~3"
-)
-exit /b 0
-
+REM  crear_libro: POST to /api/libros, extract id
 :crear_libro
 set "CAPTURED="
-curl -sS -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "{\"nombre\":\"%~1\",\"descripcion\":\"%~2\",\"editorial\":\"%~3\",\"autor\":\"%~4\",\"precioCompra\":%~5,\"precioVenta\":%~6,\"categoria\":\"%~7\",\"fechaCreacion\":\"2026-01-15\"}" > "%TEMP%\seed_cap.txt" 2>&1
-if %errorlevel% neq 0 (
+echo {"nombre":"%~1","descripcion":"%~2","editorial":"%~3","autor":"%~4","precioCompra":%~5,"precioVenta":%~6,"categoria":"%~7","fechaCreacion":"2026-01-15"} > "%TEMP%\seed_body.json"
+curl -sS -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
+set "CURL_RC=!errorlevel!"
+del "%TEMP%\seed_body.json" 2>nul
+if "!CURL_RC!" neq "0" (
     echo   [CURL ERROR] Crear libro: %~1
     type "%TEMP%\seed_cap.txt"
-    exit /b 0
+    del "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
-powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; if ($null -ne $j.id) { Write-Output $j.id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
+powershell -NoProfile -Command "$c = Get-Content '%TEMP%\seed_cap.txt' -Raw -ErrorAction SilentlyContinue; if ($c) { try { $j = ConvertFrom-Json -InputObject $c; $id = if ($j -is [array]) { $j[0].id } else { $j.id }; if ($null -ne $id) { Write-Output $id } } catch {} }" > "%TEMP%\seed_id.txt" 2>nul
 for /f "usebackq delims=" %%x in ("%TEMP%\seed_id.txt") do if "!CAPTURED!"=="" set "CAPTURED=%%x"
 if "!CAPTURED!"=="" (
-    echo   [ERROR] Crear libro: %~1
+    echo   [ERROR] No se pudo extraer ID del libro: %~1
     type "%TEMP%\seed_cap.txt"
+    echo.
+    del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
 )
 del "%TEMP%\seed_id.txt" "%TEMP%\seed_cap.txt" 2>nul
 exit /b 0
 
+REM  asignar_stock: POST to /api/stock-libros
 :asignar_stock
-curl -sf -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "{\"idLibro\":%~1,\"idSucursal\":%~2,\"stock\":%~3,\"stockMinimo\":%~4,\"stockMaximo\":%~5}" >nul 2>&1
-if %errorlevel% neq 0 echo   [ERROR] Asignar stock: Libro=%~1 Sucursal=%~2
+echo {"idLibro":%~1,"idSucursal":%~2,"stock":%~3,"stockMinimo":%~4,"stockMaximo":%~5} > "%TEMP%\seed_body.json"
+curl -sS -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" >nul 2>&1
+if !errorlevel! neq 0 echo   [ERROR] Asignar stock: Libro=%~1 Sucursal=%~2
+del "%TEMP%\seed_body.json" 2>nul
 exit /b 0

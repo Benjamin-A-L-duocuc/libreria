@@ -97,7 +97,7 @@ echo ""
 # 1) Matar procesos viejos en los puertos usados
 # --------------------------------------------------
 log "Limpiando procesos previos..."
-for port in 8080 8092 8093 8094 8084 8085 8086 8087 8089 8098; do
+for port in 9080 8092 8093 8094 8084 8085 8086 8087 8089 8098; do
     kill_port "$port"
 done
 sleep 2
@@ -107,7 +107,7 @@ log "Puertos liberados."
 # 2) Arrancar cada MS con java -jar
 # --------------------------------------------------
 SERVICES=(
-    "Gateway:8080:getawayspring"
+    "Gateway:9080:getawayspring"
     "Login:8092:Login"
     "RegistroUsuario:8093:RegistroUsuario"
     "Inventario:8094:ms-Inventario"
@@ -150,7 +150,7 @@ wait_for() {
     return 1
 }
 
-wait_for "Gateway"       8080
+wait_for "Gateway"       9080
 wait_for "Login"         8092
 wait_for "Registro"      8093
 wait_for "Inventario"    8094
@@ -165,9 +165,9 @@ echo ""
 log "Todos los servicios están UP. Sembrando datos..."
 
 # --------------------------------------------------
-# 4) Sembrar datos via Gateway (puerto 8080)
+# 4) Sembrar datos via Gateway (puerto 9080)
 # --------------------------------------------------
-GW="http://localhost:8080"
+GW="http://localhost:9080"
 
 api() {
     local method=$1 url=$2 data=$3
@@ -308,10 +308,10 @@ echo -e "${GREEN}═════════════════════
 echo -e "${GREEN}  Demo completa — todos los MS funcionando${NC}"
 echo -e "${GREEN}════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "  ${CYAN}Swagger UI (Gateway):${NC} http://localhost:8080/swagger-ui.html"
-echo -e "  ${CYAN}Monitoreo estado:${NC}    http://localhost:8080/api/v1/monitoreo/estado"
-echo -e "  ${CYAN}Detalle venta:${NC}       http://localhost:8080/api/v1/ventas/$V"
+echo -e "  ${CYAN}Swagger UI (Gateway):${NC} http://localhost:9080/swagger-ui.html"
+echo -e "  ${CYAN}Monitoreo estado:${NC}    http://localhost:9080/api/v1/monitoreo/estado"
+echo -e "  ${CYAN}Detalle venta:${NC}       http://localhost:9080/api/v1/ventas/$V"
 echo -e "  ${CYAN}Logs:${NC}               $LOG_DIR/"
 echo ""
-echo -e "  Para detener: ${YELLOW}kill \$(lsof -t -i:8080 -i:8092 -i:8093 -i:8094 -i:8084 -i:8085 -i:8086 -i:8087 -i:8089 -i:8098)${NC}"
+echo -e "  Para detener: ${YELLOW}kill \$(lsof -t -i:9080 -i:8092 -i:8093 -i:8094 -i:8084 -i:8085 -i:8086 -i:8087 -i:8089 -i:8098)${NC}"
 echo ""

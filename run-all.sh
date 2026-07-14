@@ -31,7 +31,7 @@ run_service() {
     echo "[$name] PID: $!"
 }
 
-run_service "Gateway"            8080 "getawayspring"
+run_service "Gateway"            9080 "getawayspring"
 run_service "Login"              8092 "Login"
 run_service "RegistroUsuario"    8093 "RegistroUsuario"
 run_service "Inventario"         8094 "ms-Inventario"
@@ -47,7 +47,7 @@ echo "================================================"
 echo "  All services starting. Logs in ./logs/"
 echo "================================================"
 echo ""
-echo "  Gateway ........ http://localhost:8080/swagger-ui.html"
+echo "  Gateway ........ http://localhost:9080/swagger-ui.html"
   echo "  Login .......... http://localhost:8092/swagger-ui.html"
   echo "  Registro ....... http://localhost:8093/swagger-ui.html"
   echo "  Inventario ..... http://localhost:8094/swagger-ui.html"

@@ -2,10 +2,10 @@
 # ==========================================================
 #  seed-data.sh
 #  Populates all microservices with sample data via the
-#  API Gateway (port 8080) to demonstrate end-to-end flow.
+#  API Gateway (port 9080) to demonstrate end-to-end flow.
 # ==========================================================
 
-BASE_URL="http://localhost:8080"
+BASE_URL="http://localhost:9080"
 
 # Colours for readability
 GREEN='\033[0;32m'
@@ -252,7 +252,7 @@ curl -s "$BASE_URL/api/v1/usuarios" | grep -o '"nombreCompleto":"[^"]*"' | while
 # --------------------------------------------------
 section "¡DATOS DE PRUEBA INSERTADOS!"
 # --------------------------------------------------
-echo -e "  Gateway:     ${CYAN}http://localhost:8080/swagger-ui.html${NC}"
+echo -e "  Gateway:     ${CYAN}http://localhost:9080/swagger-ui.html${NC}"
 echo -e "  Sucursales:  ${CYAN}${ID_CENTRO}${NC} (Centro), ${CYAN}${ID_NORTE}${NC} (Norte)"
 echo -e "  Libros:      ${CYAN}${L1}${NC}-${CYAN}${L5}${NC}"
 echo -e "  Usuarios:    ${CYAN}${ID_ADMIN}${NC} (Admin), ${CYAN}${ID_CAJERO}${NC} (Cajero), ${CYAN}${ID_CLIENTE1}${NC} (Juan), ${CYAN}${ID_CLIENTE2}${NC} (Ana)"
@@ -262,7 +262,7 @@ echo -e "  Venta:       ${CYAN}${ID_VENTA}${NC} (finalizada)"
 echo -e "  Envío:       ${CYAN}${ID_ENVIO}${NC} (Folio: ${FOLIO})"
 echo ""
 echo -e "  Para ver el detalle de precios en la venta presencial:"
-echo -e "    ${YELLOW}curl http://localhost:8080/api/v1/ventas/${ID_VENTA}${NC}"
+echo -e "    ${YELLOW}curl http://localhost:9080/api/v1/ventas/${ID_VENTA}${NC}"
 echo ""
 echo -e "  Para probar el flujo nuevamente, borra la DB y corre:"
 echo -e "    ${YELLOW}./run-all.sh${NC}"

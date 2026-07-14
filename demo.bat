@@ -2,8 +2,8 @@
 setlocal enabledelayedexpansion
 
 set "BASE_DIR=%~dp0"
-set "GW=http://localhost:8080"
-set "PORTS=8080 8092 8093 8094 8084 8085 8086 8087 8089 8098"
+set "GW=http://localhost:9080"
+set "PORTS=9080 8092 8093 8094 8084 8085 8086 8087 8089 8098"
 
 REM --------------------------------------------------
 REM  --clean: drop all tables via MySQL
@@ -76,7 +76,7 @@ REM     (Monitoreo se lanza despues para evitar race condition)
 REM --------------------------------------------------
 echo [2/5] Iniciando microservicios...
 
-set "FIRST_WAVE=Gateway:8080:getawayspring Login:8092:Login RegistroUsuario:8093:RegistroUsuario Inventario:8094:ms-Inventario Envios:8084:Envios TiendaWeb:8085:TiendaWeb Sucursal:8086:ms-Sucursal Ventas:8087:venta_libro\libro Proveedores:8098:proveedor_libro\libros"
+set "FIRST_WAVE=Gateway:9080:getawayspring Login:8092:Login RegistroUsuario:8093:RegistroUsuario Inventario:8094:ms-Inventario Envios:8084:Envios TiendaWeb:8085:TiendaWeb Sucursal:8086:ms-Sucursal Ventas:8087:venta_libro\libro Proveedores:8098:proveedor_libro\libros"
 
 for %%s in (%FIRST_WAVE%) do (
     for /f "tokens=1-3 delims=:" %%a in ("%%s") do (
@@ -92,7 +92,7 @@ REM  3) Esperar primeros 9, luego lanzar Monitoreo
 REM --------------------------------------------------
 echo [3/5] Esperando que los servicios esten listos...
 
-call :wait_for 8080 Gateway
+call :wait_for 9080 Gateway
 if errorlevel 1 (
     echo.
     echo  ERROR: Gateway no disponible. Verifique que el submodulo
@@ -130,8 +130,8 @@ echo ================================================
 echo            RESUMEN DEL SISTEMA
 echo ================================================
 echo.
-echo  Swagger UI (Gateway): http://localhost:8080/swagger-ui.html
-echo  Monitoreo estado:     http://localhost:8080/api/v1/monitoreo/estado
+echo  Swagger UI (Gateway): http://localhost:9080/swagger-ui.html
+echo  Monitoreo estado:     http://localhost:9080/api/v1/monitoreo/estado
 echo.
 echo  Sucursales:
 curl -sf "%GW%/api/sucursales" 2>nul | findstr /r /c:"nombre" 2>nul
