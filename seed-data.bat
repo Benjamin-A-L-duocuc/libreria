@@ -275,7 +275,7 @@ exit /b 1
 REM  api_send: POST/PATCH with body from %TEMP%\seed_body.json, extract id
 :api_send
 set "CAPTURED="
-curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
+curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
 set "CURL_RC=!errorlevel!"
 del "%TEMP%\seed_body.json" 2>nul
 if "!CURL_RC!" neq "0" (
@@ -342,7 +342,7 @@ REM  crear_libro: POST to /api/libros, extract id
 :crear_libro
 set "CAPTURED="
 echo {"nombre":"%~1","descripcion":"%~2","editorial":"%~3","autor":"%~4","precioCompra":%~5,"precioVenta":%~6,"categoria":"%~7","fechaCreacion":"2026-01-15"} > "%TEMP%\seed_body.json"
-curl -sS -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
+curl -sf -X POST "%BASE_URL%/api/libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
 set "CURL_RC=!errorlevel!"
 del "%TEMP%\seed_body.json" 2>nul
 if "!CURL_RC!" neq "0" (
@@ -365,6 +365,8 @@ exit /b 0
 
 REM  asignar_stock: POST to /api/stock-libros
 :asignar_stock
+if "%~1"=="" ( echo   [ERROR] asignar_stock: idLibro vacio & exit /b 1 )
+if "%~2"=="" ( echo   [ERROR] asignar_stock: idSucursal vacio & exit /b 1 )
 echo {"idLibro":%~1,"idSucursal":%~2,"stock":%~3,"stockMinimo":%~4,"stockMaximo":%~5} > "%TEMP%\seed_body.json"
 curl -sf -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
 set "CURL_RC=!errorlevel!"
