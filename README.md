@@ -113,6 +113,47 @@ Despues de ejecutar `demo.bat` o `seed-data.bat`, la base contiene:
 | Venta | 1 | Presencial, 3 libros, pago en efectivo |
 | Envio | 1 | Flujo completo: creado, programado, enviado, recibido |
 
+## Postman: Venta Presencial
+
+Flujo completo para probar una venta en sucursal después de ejecutar `demo.bat` o `seed-data.bat`.
+
+### 1. Ver datos disponibles (opcional)
+| # | Método | URL | Descripción |
+|---|--------|-----|-------------|
+| 1.1 | GET | `http://localhost:9080/api/sucursales` | Listar sucursales → Centro (id: 1), Norte (id: 2) |
+| 1.2 | GET | `http://localhost:9080/api/v1/usuarios` | Listar usuarios → anotar id de Juan Perez (cliente) |
+| 1.3 | GET | `http://localhost:9080/api/libros` | Listar libros → anotar id de cada libro |
+
+### 2. Crear venta
+| # | Método | URL | Body |
+|---|--------|-----|------|
+| 2 | POST | `http://localhost:9080/api/v1/ventas/crear` | `{"idSucursal":1,"idCliente":3}` |
+
+Response → `201 Created`, anotar `id` de la venta (ej: V1).
+
+### 3. Agregar productos
+| # | Método | URL | Body |
+|---|--------|-----|------|
+| 3.1 | POST | `http://localhost:9080/api/v1/ventas/{V1}/productos` | `{"idLibro":1,"cantidad":2}` |
+| 3.2 | POST | `http://localhost:9080/api/v1/ventas/{V1}/productos` | `{"idLibro":3,"cantidad":1}` |
+| 3.3 | POST | `http://localhost:9080/api/v1/ventas/{V1}/productos` | `{"idLibro":5,"cantidad":1,"descuentoId":1}` |
+
+Cada uno → `201 Created`. `descuentoId` es opcional (seed crea un 10% OFF con ID 1).
+
+### 4. Finalizar venta
+| # | Método | URL | Body |
+|---|--------|-----|------|
+| 4 | POST | `http://localhost:9080/api/v1/ventas/{V1}/finalizar` | `{"medioPago":"EFECTIVO","montoPagado":60000}` |
+
+MedioPago posible: `EFECTIVO`, `DEBITO`, `CREDITO`, `TRANSFERENCIA`, `JUNAEB`.  
+Response → `200 OK` con el detalle de la venta (total calculado, fecha, productos).
+
+### 5. Verificar
+| # | Método | URL | Descripción |
+|---|--------|-----|-------------|
+| 5.1 | GET | `http://localhost:9080/api/v1/ventas/{V1}` | Ver venta completa |
+| 5.2 | GET | `http://localhost:9080/api/libros/1` | Ver que `unidadesVendidas` subió |
+
 ## Puertos y rutas del Gateway
 
 | Servicio | Puerto | Ruta Gateway |
