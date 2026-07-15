@@ -95,14 +95,19 @@ echo [3/10] CREANDO LIBROS (Inventario)
 REM --------------------------------------------------
 
 call :crear_libro "Cien Anos de Soledad" "Novela del realismo magico" "Sudamericana" "Gabriel Garcia Marquez" 5000 15000 "FICCION"
+if errorlevel 1 goto :fatal
 set "L1=%CAPTURED%"
 call :crear_libro "Breve Historia del Tiempo" "Divulgacion cientifica" "Bantam Books" "Stephen Hawking" 7000 12000 "CIENCIA_FICCION"
+if errorlevel 1 goto :fatal
 set "L2=%CAPTURED%"
 call :crear_libro "1984" "Distopia clasica" "Secker & Warburg" "George Orwell" 4000 10000 "FICCION"
+if errorlevel 1 goto :fatal
 set "L3=%CAPTURED%"
 call :crear_libro "El Principito" "Literatura infantil" "Reynal & Hitchcock" "Antoine Saint-Exupery" 3000 8000 "INFANTIL"
+if errorlevel 1 goto :fatal
 set "L4=%CAPTURED%"
 call :crear_libro "Clean Code" "Buenas practicas de programacion" "Prentice Hall" "Robert C. Martin" 12000 25000 "NO_FICCION"
+if errorlevel 1 goto :fatal
 set "L5=%CAPTURED%"
 echo   [OK] Libros: %L1%, %L2%, %L3%, %L4%, %L5%
 
@@ -111,17 +116,27 @@ echo [4/10] ASIGNANDO STOCK
 REM --------------------------------------------------
 
 call :asignar_stock %L1% %ID_CENTRO% 20 5 100
+if errorlevel 1 goto :fatal
 call :asignar_stock %L2% %ID_CENTRO% 15 5 50
+if errorlevel 1 goto :fatal
 call :asignar_stock %L3% %ID_CENTRO% 10 3 80
+if errorlevel 1 goto :fatal
 call :asignar_stock %L4% %ID_CENTRO% 30 10 120
+if errorlevel 1 goto :fatal
 call :asignar_stock %L5% %ID_CENTRO% 8 2 30
+if errorlevel 1 goto :fatal
 echo   [OK] Stock asignado en Sucursal Centro
 
 call :asignar_stock %L1% %ID_NORTE% 10 5 80
+if errorlevel 1 goto :fatal
 call :asignar_stock %L2% %ID_NORTE% 5 3 40
+if errorlevel 1 goto :fatal
 call :asignar_stock %L3% %ID_NORTE% 8 3 60
+if errorlevel 1 goto :fatal
 call :asignar_stock %L4% %ID_NORTE% 20 10 100
+if errorlevel 1 goto :fatal
 call :asignar_stock %L5% %ID_NORTE% 3 1 20
+if errorlevel 1 goto :fatal
 echo   [OK] Stock asignado en Sucursal Norte
 
 REM --------------------------------------------------
@@ -283,7 +298,7 @@ exit /b 0
 
 REM  api_fire: POST/PATCH with body from %TEMP%\seed_body.json, fire-and-forget
 :api_fire
-curl -sS -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" >nul 2>&1
+curl -sf -X %~1 "%BASE_URL%%~2" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" >nul 2>&1
 set "CURL_RC=!errorlevel!"
 del "%TEMP%\seed_body.json" 2>nul
 if "!CURL_RC!" neq "0" echo   [ERROR] %~1 %~2
@@ -297,7 +312,7 @@ exit /b 0
 
 REM  api_call: POST/PATCH without body, fire-and-forget
 :api_call
-curl -sS -X %~1 "%BASE_URL%%~2" >nul 2>&1
+curl -sf -X %~1 "%BASE_URL%%~2" >nul 2>&1
 if !errorlevel! neq 0 echo   [ERROR] %~1 %~2
 exit /b 0
 
@@ -351,7 +366,14 @@ exit /b 0
 REM  asignar_stock: POST to /api/stock-libros
 :asignar_stock
 echo {"idLibro":%~1,"idSucursal":%~2,"stock":%~3,"stockMinimo":%~4,"stockMaximo":%~5} > "%TEMP%\seed_body.json"
-curl -sS -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" >nul 2>&1
-if !errorlevel! neq 0 echo   [ERROR] Asignar stock: Libro=%~1 Sucursal=%~2
+curl -sf -X POST "%BASE_URL%/api/stock-libros" -H "Content-Type: application/json" -d "@%TEMP%\seed_body.json" > "%TEMP%\seed_cap.txt" 2>&1
+set "CURL_RC=!errorlevel!"
 del "%TEMP%\seed_body.json" 2>nul
+if "!CURL_RC!" neq "0" (
+    echo   [ERROR] Asignar stock: Libro=%~1 Sucursal=%~2
+    type "%TEMP%\seed_cap.txt"
+    del "%TEMP%\seed_cap.txt" 2>nul
+    exit /b 1
+)
+del "%TEMP%\seed_cap.txt" 2>nul
 exit /b 0
